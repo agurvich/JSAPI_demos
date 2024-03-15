@@ -23,11 +23,14 @@
       };
     </script>
     <script src="https://js.arcgis.com/4.29/"></script>
+    <script src="game.js"></script>
     <script src="index.js"></script>
   </head>
 
   <body>
     <div id="viewDiv"></div>
+    <div style="position:absolute; top:0; right:0; z-index: 1000000;font-size:48px; color:white;">
+      <span id="counterDiv" >0</span> visited</div>
     <footer>
       This map is made with
       <a href="https://developers.arcgis.com/javascript/" target="_blank"

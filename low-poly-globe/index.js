@@ -1,3 +1,5 @@
+const stateVariables = {};
+
 require([
   "esri/Map",
   "esri/views/SceneView",
@@ -112,6 +114,20 @@ require([
   window.view = view;
 
   addLandData();
+  const classes = {Graphic,Point,SpatialReference};
+  stateVariables.redDot = addRedDot({meshLandLayer,...classes});
+  stateVariables.x = stateVariables.redDot.geometry.x;
+  stateVariables.y = stateVariables.redDot.geometry.y;
+  stateVariables.landmarksLayer = landmarksLayer;
+  stateVariables.landmarks = { filled:false };
+  getLandmarks();
+  setupControls({meshLandLayer,...classes});
+
+  // bind the landmarks layer view
+  view.whenLayerView(landmarksLayer)
+  .then((landmarksLayerView) => {
+    stateVariables.landmarksLayerView = landmarksLayerView;
+  });
 
   async function addLandData() {
     const pointsResponse = await fetch("./assets/steinerPoints_simplified.json")
