@@ -1,13 +1,19 @@
-import { useState } from 'react'
 import LowPolyGlobe from './components/low-poly-globe'
 
 import './style.css'
+import { useGameState } from './contexts/game-state'
+import ScoreCounter from './components/score-counter'
+import Leaderboard from './components/leaderboard'
 
 function App() {
-    const [count, setCount] = useState(0)
+    const { gameOver } = useGameState()
 
     return (
-        <LowPolyGlobe/>
+        <>
+            <LowPolyGlobe/>
+            <ScoreCounter/>
+            { gameOver && <Leaderboard/> }
+        </>
     );
 }
 
