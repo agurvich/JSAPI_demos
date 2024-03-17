@@ -168,25 +168,45 @@ function LowPolyGlobe({}){
 export default LowPolyGlobe;
 
 function addRedDot({ meshLayer, vehicleLocation, currentVehicle }){
-    // Create the red dot graphic
-    var redDot = new Graphic({
-        geometry: new Point({
-            x:vehicleLocation.x,
-            y:vehicleLocation.y,
-            z:vehicleLocation.z,
-            spatialReference:SpatialReference.WebMercator
-        }),
-        symbol: {
-            type: "simple-marker",
-            color: currentVehicle.color, // RGBA red color
-            size: "24px"
-        }
+    const point = new Point({
+        x: vehicleLocation.x,
+        y: vehicleLocation.y,
+        z: vehicleLocation.z,
+        spatialReference: SpatialReference.WebMercator
+    });
+    
+    const markerSymbol = {
+        type: "simple-marker", 
+        color: currentVehicle.color,
+        size: "24px"
+    };
+    
+    const textSymbol = {
+        type: "text",  
+        color: "black",
+        text: currentVehicle.name,
+        font: { size: 12, family: "Arial" },
+        xoffset: 20,  // Horizontal offset in pixels
+        yoffset: 10   // Vertical offset in pixels
+    };
+    
+    const compositeSymbol = {
+        type: "point-3d",
+        symbolLayers: [
+            { type: "icon", resource: { primitive: "circle" }, material: { color: markerSymbol.color }, size: markerSymbol.size },
+            { type: "text", text: textSymbol.text, material: { color: textSymbol.color }, size: textSymbol.font.size }
+        ]
+    };
+    
+    const graphic = new Graphic({
+        geometry: point,
+        symbol: compositeSymbol 
     });
 
     // Add the red dot to an appropriate graphics layer
-    if (meshLayer) meshLayer.add(redDot);
+    if (meshLayer) meshLayer.add(graphic);
 
-    return redDot;
+    return graphic;
 
 }
 

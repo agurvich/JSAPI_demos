@@ -5,7 +5,7 @@ import { vehicles } from '../utils/vehicle';
 const GameStateContext = createContext();
 
 // Provider component
-export const GameStateProvider = ({ children, maxTime=30 }) => {
+export const GameStateProvider = ({ children, maxTime=60 }) => {
 
     // game control
     const [startTime, setStartTime] = useState();
@@ -32,10 +32,13 @@ export const GameStateProvider = ({ children, maxTime=30 }) => {
     useEffect(()=>{
 
         function handleCycleVehicle(event){
-            if (event.key === 'q') {
-                // Code to select the previous vehicle
-            } else if (event.key === 'e') {
-                // Code to select the next vehicle
+            if (event.key === '1') {
+                setCurrentVehicle(vehicles.air[0]);
+            } else if (event.key === '2') {
+                setCurrentVehicle(vehicles.land[0]);
+            }
+            else if (event.key === '3') {
+                setCurrentVehicle(vehicles.sea[0]);
             }
         }
 
@@ -89,7 +92,7 @@ export const GameStateProvider = ({ children, maxTime=30 }) => {
             // stop the movement of the vehicle
             if (gameOver) clearInterval(interval);
 
-            var moveSize = 300; // Degree to move the red dot by
+            var moveSize = 150; // Degree to move the red dot by
 
             // update the vehicle's location
             setVehicleLocation( prevVehicleLocation => {

@@ -1,36 +1,18 @@
-<!DOCTYPE html>
-<html>
+<!doctype html>
+<html lang="en">
   <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="initial-scale=1" />
-    <title>Low poly map of the world</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link
       rel="stylesheet"
       href="https://js.arcgis.com/4.29/esri/css/main.css"
     />
-    <link rel="stylesheet" href="style.css" />
-    <script src="//cdnjs.cloudflare.com/ajax/libs/seedrandom/3.0.5/seedrandom.min.js"></script>
-    <script>
-      var locationPath =
-        location.origin + location.pathname.replace(/\/[^\/]+$/, "");
-      window.dojoConfig = {
-        packages: [
-          {
-            name: "lib",
-            location: locationPath + "/lib",
-          },
-        ],
-      };
-    </script>
-    <script src="https://js.arcgis.com/4.29/"></script>
-    <script src="game.js"></script>
-    <script src="index.js"></script>
+    <title>Low Poly Globe - Visit the Landmarks!</title>
+    <script type="module" crossorigin src="/assets/index-BqO8XNEn.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-rovX6Grx.css">
   </head>
-
   <body>
-    <div id="viewDiv"></div>
-    <div style="position:absolute; top:0; right:0; z-index: 1000000;font-size:48px; color:white;">
-      <span id="counterDiv" >0</span> visited</div>
+    <div id="root"></div>
     <footer>
       This map is made with
       <a href="https://developers.arcgis.com/javascript/" target="_blank"
