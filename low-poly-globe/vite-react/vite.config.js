@@ -4,7 +4,7 @@ import react from '@vitejs/plugin-react-swc'
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
-  base : '/JSAPI_demos/low-poly-globe',
+  base: process.env.NODE_ENV === 'production' ? '/JSAPI_demos/low-poly-globe' : '/',
   define: {
       global: {},
   }
