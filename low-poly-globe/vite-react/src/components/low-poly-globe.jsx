@@ -21,6 +21,8 @@ function LowPolyGlobe({}){
     const [landmarks,setLandmarks] = useState({});
     const [landmarksLayerView,setLandmarksLayerView] = useState();
 
+    const { vehicleLocation, currentVehicle, setNumVisited, setGameOver, setStartTime } = useGameState();
+
     useEffect(() => {
         const R = 6378137;
 
@@ -118,12 +120,10 @@ function LowPolyGlobe({}){
         addRedDot({meshLandLayer, vehicleLocation, currentVehicle });
 
         // bind the landmarks layer view
-        view.whenLayerView(landmarksLayer).then(setLandmarksLayerView);
+        view.whenLayerView(landmarksLayer).then(setLandmarksLayerView).then(()=>{setStartTime(new Date())})
                 
         console.log('initializing')
     }, []);
-
-    const { vehicleLocation, currentVehicle, setNumVisited, setGameOver } = useGameState();
 
     // draw the vehicle
     useEffect(()=>{

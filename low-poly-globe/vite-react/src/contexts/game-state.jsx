@@ -8,7 +8,7 @@ const GameStateContext = createContext();
 export const GameStateProvider = ({ children, maxTime=30 }) => {
 
     // game control
-    const [startTime, setStartTime] = useState(new Date());
+    const [startTime, setStartTime] = useState();
     const [elapsedTime, setElapsedTime] = useState(0);
     const [gameOver, setGameOver] = useState(false);
 
@@ -46,10 +46,13 @@ export const GameStateProvider = ({ children, maxTime=30 }) => {
     // update the vehicle's position
     useEffect(()=>{
         const interval = setInterval(() => {
+            // don't do anything until the game has started
+            if (!startTime) return;
+
             // stop the movement of the vehicle
             if (gameOver) clearInterval(interval);
 
-            var moveSize = 100; // Degree to move the red dot by
+            var moveSize = 300; // Degree to move the red dot by
 
             // update the vehicle's location
             setVehicleLocation( prevVehicleLocation => {
@@ -70,7 +73,7 @@ export const GameStateProvider = ({ children, maxTime=30 }) => {
         },100);
 
         return () => clearInterval(interval);
-    },[gameOver,currentVehicle]);
+    },[startTime,gameOver,currentVehicle]);
 
     useEffect(()=>{}, [vehicleLocation]);
 
@@ -80,7 +83,7 @@ export const GameStateProvider = ({ children, maxTime=30 }) => {
         totalCO2, setTotalCO2,
         currentVehicle,setCurrentVehicle,
         gameOver, setGameOver,
-        elapsedTime,
+        elapsedTime,setStartTime
     };
 
     return (

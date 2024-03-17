@@ -14,7 +14,7 @@ function ScoreCounter({}){
 
     return (
         <ScoreCounterContainer>
-            <p> Time Elapsed: {elapsedTime} seconds </p>
+            <p> Time Elapsed: {elapsedTime ? elapsedTime : 0 } seconds </p>
             <p> Visited: {numVisited} landmarks  </p>
             <p> Carbon Emissions: {totalCO2} tons </p>
         </ScoreCounterContainer>
