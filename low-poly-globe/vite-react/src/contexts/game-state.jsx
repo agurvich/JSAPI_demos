@@ -28,6 +28,43 @@ export const GameStateProvider = ({ children, maxTime=30 }) => {
     const [allVehicles, setAllVehicles] = useState( vehicles );
     const [currentVehicle, setCurrentVehicle] = useState(allVehicles.air[0]);
 
+    // bind controls to cycle vehicle & change heading
+    useEffect(()=>{
+
+        function handleCycleVehicle(event){
+            if (event.key === 'q') {
+                // Code to select the previous vehicle
+            } else if (event.key === 'e') {
+                // Code to select the next vehicle
+            }
+        }
+
+        document.addEventListener('keydown', handleCycleVehicle);
+
+        function handleHeadingChange(event){
+            if (event.key === 'w') {
+                setVehicleLocation( prevVehicleLocation => {
+                    return {
+                        ...prevVehicleLocation,
+                        headingDegrees:(prevVehicleLocation.headingDegrees+5)%360}
+                });
+            } else if (event.key === 's') {
+                setVehicleLocation( prevVehicleLocation => {
+                    return {
+                        ...prevVehicleLocation,
+                        headingDegrees:(prevVehicleLocation.headingDegrees-5)%360}
+                });
+            }
+        }
+
+        document.addEventListener('keydown', handleHeadingChange);
+
+        return () => {
+            document.removeEventListener('keydown',handleCycleVehicle);
+            document.removeEventListener('keydown',handleHeadingChange);
+        }
+    },[]);
+
     // update elapsed time every second
     useEffect(() => {
         const interval = setInterval(() => {
