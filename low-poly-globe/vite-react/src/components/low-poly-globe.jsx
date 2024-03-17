@@ -1,17 +1,25 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 import Map from "@arcgis/core/Map";
 import Mesh from "@arcgis/core/geometry/Mesh";
 import SceneView from "@arcgis/core/views/SceneView";
 import Graphic from "@arcgis/core/Graphic";
 import Point from "@arcgis/core/geometry/Point";
+import SpatialReference from "@arcgis/core/geometry/SpatialReference";
 import GraphicsLayer from "@arcgis/core/layers/GraphicsLayer";
 import SceneLayer from "@arcgis/core/layers/SceneLayer";
 import TileLayer from "@arcgis/core/layers/TileLayer";
 
+
 import addLandData from '../utils/add-land-data';
+import { useGameState } from '../contexts/game-state';
 
 function LowPolyGlobe({}){
+
+    const [meshLayer,setMeshLayer] = useState();
+    const [vehicleMarker,setVehicleMarker] = useState();
+    const [landmarks,setLandmarks] = useState({});
+    const [landmarksLayerView,setLandmarksLayerView] = useState();
 
     useEffect(() => {
         const R = 6378137;
@@ -95,25 +103,62 @@ function LowPolyGlobe({}){
         window.view = view;
         addLandData(meshLandLayer);
 
-        /*
-        const classes = {Graphic,Point,SpatialReference};
-        stateVariables.redDot = addRedDot({meshLandLayer,...classes});
-        stateVariables.x = stateVariables.redDot.geometry.x;
-        stateVariables.y = stateVariables.redDot.geometry.y;
-        stateVariables.landmarksLayer = landmarksLayer;
-        stateVariables.landmarks = { filled:false };
-        getLandmarks();
-        setupControls({meshLandLayer,...classes});
+        // store the meshLandLayer so it can be used to update the position of the vehicle
+        setMeshLayer(meshLandLayer);
+
+        // query the landmarksLayer to create a store
+        //  to keep track of which landmarks we've visited
+        //  NOTE: this is not *strictly* necessary, 
+        //  could keep an empty "visited" log and then fill it with whatever
+        //  matches the filter in checkLandmarks. We'd never know if you were done
+        //  early though!
+        getLandmarks(landmarksLayer).then(setLandmarks);
+
+        // add the initial position
+        addRedDot({meshLandLayer, vehicleLocation, currentVehicle });
 
         // bind the landmarks layer view
-        view.whenLayerView(landmarksLayer)
-        .then((landmarksLayerView) => {
-            stateVariables.landmarksLayerView = landmarksLayerView;
-        });
-        */
+        view.whenLayerView(landmarksLayer).then(setLandmarksLayerView);
                 
         console.log('initializing')
     }, []);
+
+    const { vehicleLocation, currentVehicle, setNumVisited, setGameOver } = useGameState();
+
+    // draw the vehicle
+    useEffect(()=>{
+
+        /*
+            TODO: this results in a momentary flash, surely we shouldn't
+            have to add+remove just to translate the dot...
+        */
+        if (meshLayer && vehicleMarker) meshLayer.remove(vehicleMarker);
+
+        setVehicleMarker(addRedDot({ meshLayer, vehicleLocation, currentVehicle}));
+
+    },[vehicleLocation,currentVehicle]);
+
+    // check if the vehicle is close to a landmark
+    useEffect(()=>{
+        if (landmarksLayerView && vehicleLocation) {
+            checkLandmarks({vehicleLocation,landmarksLayerView,setLandmarks});
+        }
+    },[vehicleLocation,landmarksLayerView]);
+
+    // update the score
+    useEffect(()=>{
+        // Count the number of visited landmarks
+        const count = Object.values(landmarks).reduce(
+            (count, landmark) => landmark.visited ? count + 1 : count,
+        0);
+
+        // update the state variable
+        setNumVisited(count);
+
+        // if we've visited all the landmarks the game should end
+        if ( count > 0 && count === Object.values(landmarks).length ) setGameOver(true);
+
+    },[landmarks]);
 
     return (
         <div id="viewDiv" style={{ height: '100vh', width: '100vw' }}></div>
@@ -121,3 +166,87 @@ function LowPolyGlobe({}){
 };
 
 export default LowPolyGlobe;
+
+function addRedDot({ meshLayer, vehicleLocation, currentVehicle }){
+    // Create the red dot graphic
+    var redDot = new Graphic({
+        geometry: new Point({
+            x:vehicleLocation.x,
+            y:vehicleLocation.y,
+            z:vehicleLocation.z,
+            spatialReference:SpatialReference.WebMercator
+        }),
+        symbol: {
+            type: "simple-marker",
+            color: currentVehicle.color, // RGBA red color
+            size: "24px"
+        }
+    });
+
+    // Add the red dot to an appropriate graphics layer
+    if (meshLayer) meshLayer.add(redDot);
+
+    return redDot;
+
+}
+
+function checkLandmarks({
+    vehicleLocation,
+    landmarksLayerView,
+    setLandmarks,
+    distance=100000
+}){
+
+    // Now that the layerView is ready, you can perform queries
+    const query = {
+        geometry: {
+            type:"point",
+            x:vehicleLocation.x,
+            y:vehicleLocation.y,
+            z:vehicleLocation.z
+        },
+        distance,
+        units: "meters",
+        spatialRelationship: "intersects",
+        returnGeometry: false,
+        outFields: ["OBJECTID"] // Adjust as needed
+    };
+
+    landmarksLayerView.queryFeatures(query).then((results) => {
+        if (results.features.length > 0) setLandmarks( prevLandmarks =>{
+
+            const newLandmarks = {...prevLandmarks}
+
+            results.features.forEach( feature => {
+                newLandmarks[feature.attributes.OBJECTID].visited = true;
+            });
+
+            return newLandmarks;
+        });
+    });
+}
+
+async function getLandmarks(landmarksLayer){
+    let query = landmarksLayer.createQuery();
+    query.where = "1=1";  // Fetches all features
+    query.returnGeometry = true;  // Ensures geometries are returned
+
+    return landmarksLayer.queryFeatures(query)
+    .then(function(results) {
+        const landmarks = {}
+        // Process each feature's geometry
+        results.features.forEach(function(feature) {
+            landmarks[feature.attributes.OBJECTID] = {
+                visited:false,
+                name:feature.attributes.Name,
+                x:feature.geometry.origin.x, // Log or process the geometry
+                y:feature.geometry.origin.y, // Log or process the geometry
+                z:feature.geometry.origin.z  // Log or process the geometry
+            }
+        });
+        return landmarks;
+    })
+    .catch(function(error) {
+        console.error("Query error: ", error);
+    });
+}

@@ -1,11 +1,11 @@
 import { useContext, createContext, useState, useEffect } from 'react';
+import { vehicles } from '../utils/vehicle';
 
 // Create context
 const GameStateContext = createContext();
 
 // Provider component
 export const GameStateProvider = ({ children, maxTime=30 }) => {
-
 
     // game control
     const [startTime, setStartTime] = useState(new Date());
@@ -17,7 +17,16 @@ export const GameStateProvider = ({ children, maxTime=30 }) => {
     const [totalCO2, setTotalCO2] = useState(0);
 
     // vehicles
-    const [vehicleLocation, setVehicleLocation] = useState({ lat: 0, long: 0 });
+    const [vehicleLocation, setVehicleLocation] = useState({
+        x: 0,
+        y: 0,
+        z: 250000 + 100000,
+        headingDegrees:0 });
+
+    // TODO: can use setAllVehicles to unlock new vehicles as players
+    //  visit more monuments/specific monuments
+    const [allVehicles, setAllVehicles] = useState( vehicles );
+    const [currentVehicle, setCurrentVehicle] = useState(allVehicles.air[0]);
 
     // update elapsed time every second
     useEffect(() => {
@@ -34,11 +43,44 @@ export const GameStateProvider = ({ children, maxTime=30 }) => {
         return () => clearInterval(interval);
     }, [startTime]);
 
+    // update the vehicle's position
+    useEffect(()=>{
+        const interval = setInterval(() => {
+            // stop the movement of the vehicle
+            if (gameOver) clearInterval(interval);
+
+            var moveSize = 100; // Degree to move the red dot by
+
+            // update the vehicle's location
+            setVehicleLocation( prevVehicleLocation => {
+                const newVehicleLocation = {...prevVehicleLocation}
+                newVehicleLocation.x += (
+                    moveSize * currentVehicle.speed * Math.cos(prevVehicleLocation.headingDegrees*Math.PI/180)
+                );
+                newVehicleLocation.y += (
+                    moveSize * currentVehicle.speed * Math.sin(prevVehicleLocation.headingDegrees*Math.PI/180)
+                );
+
+                return newVehicleLocation;
+            });
+
+            // update the total CO2 emitted
+            setTotalCO2(prevCO2 => prevCO2 + currentVehicle.carbonEmissionRate);
+
+        },100);
+
+        return () => clearInterval(interval);
+    },[gameOver,currentVehicle]);
+
+    useEffect(()=>{}, [vehicleLocation]);
+
     const value = {
         vehicleLocation, setVehicleLocation,
         numVisited, setNumVisited,
         totalCO2, setTotalCO2,
-        elapsedTime, gameOver
+        currentVehicle,setCurrentVehicle,
+        gameOver, setGameOver,
+        elapsedTime,
     };
 
     return (
